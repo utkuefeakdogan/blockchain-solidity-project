@@ -26,3 +26,118 @@ A fully on-chain, trustless lottery protocol built with Solidity and deployed vi
 ---
 
 ## 🏗️ Architecture
+
+blockchain-solidity-project/
+├── contracts/
+│   ├── MyLottery.sol        # Core lottery contract
+│   └── HelloBlockchain.sol  # Entry-point demo contract
+├── migrations/              # Truffle deployment scripts
+├── test/                    # JavaScript test suite
+├── scripts/                 # Utility & interaction scripts
+├── ipfs/                    # IPFS-linked metadata
+└── truffle-config.js        # Network & compiler configuration
+
+### Smart Contract: `MyLottery.sol`
+
+| Component | Description |
+|-----------|-------------|
+| `Ticket` struct | Stores owner address, hash, ticket type, status, lottery round, and win amount |
+| `Lottery` struct | Stores winning hashes, prize pool, and winner ID per round |
+| `buyTicket()` | Deducts balance, records ticket with commit hash, adds to prize pool |
+| `LotteryFunction()` | Finalizes a round — generates winning hashes, selects winner by ID |
+| `checkIfTicketWon()` | Compares ticket ID against winning ID; updates win amount |
+| `collectTicketPrize()` | Transfers prize to winner based on ticket tier |
+| `collectTicketRefund()` | Returns ticket cost if lottery hasn't concluded |
+| `revealRndNumber()` | Allows ticket owner to reveal their committed hash |
+| `getLotteryNos()` | Maps a Unix timestamp to its corresponding lottery round number |
+
+---
+
+## 🔐 Randomness & Fairness
+
+Winner selection uses `keccak256(block.timestamp, block.difficulty, i)` to generate three candidate winning hashes per round. The final winner ID is computed as:
+
+```solidity
+uint256 randomNumber = uint256(
+    keccak256(abi.encodePacked(block.timestamp, block.difficulty))
+) % (upperBound - lowerBound + 1);
+```
+
+> **Note:** Block-based randomness is suitable for a course-level implementation. Production systems should integrate a VRF oracle (e.g., Chainlink VRF) for cryptographically secure randomness.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js >= 14
+- Truffle: `npm install -g truffle`
+- Ganache (local testnet)
+- MetaMask (for testnet interaction)
+
+### Installation
+
+```bash
+git clone https://github.com/utkuefeakdogan/blockchain-solidity-project.git
+cd blockchain-solidity-project
+npm install
+```
+
+### Compile & Deploy
+
+```bash
+# Compile contracts
+truffle compile
+
+# Deploy to local Ganache
+truffle migrate --network development
+
+# Deploy to a public testnet (configure truffle-config.js first)
+truffle migrate --network sepolia
+```
+
+### Run Tests
+
+```bash
+truffle test
+```
+
+---
+
+## 🎟️ How It Works
+
+1. **Deposit ETH** — Call `depositEther(amount)` to load your contract balance
+2. **Buy a Ticket** — Choose your tier and submit a `keccak256` hash of your secret random number
+3. **Lottery Draw** — Owner calls `LotteryFunction()` at the end of the weekly round
+4. **Check & Claim** — Call `checkIfTicketWon()` then `collectTicketPrize()` if you won
+5. **Refund** — Call `collectTicketRefund()` anytime before the draw if you change your mind
+
+---
+
+## 📊 Prize Distribution
+
+| Ticket Type | Cost | Prize (if winner) |
+|-------------|------|-------------------|
+| Full        | 8 ETH | 100% of round pool |
+| Half        | 4 ETH | 50% of round pool  |
+| Quarter     | 2 ETH | 25% of round pool  |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Smart Contract | Solidity ^0.8.9 |
+| Development Framework | Truffle Suite |
+| Local Blockchain | Ganache |
+| Off-chain Storage | IPFS |
+| Testing | JavaScript (Truffle test runner) |
+| Wallet | MetaMask |
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
